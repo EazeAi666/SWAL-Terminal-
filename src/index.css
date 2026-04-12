@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-terminal-bg: #0c0c0c;
+  --color-terminal-text: #e0e0e0;
+  --color-terminal-green: #00ff41;
+  --color-terminal-blue: #00aaff;
+  --color-terminal-accent: #ff00ff;
+}
+
+@layer base {
+  body {
+    @apply bg-terminal-bg text-terminal-text font-mono;
+  }
+}
+
+.terminal-glow {
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+}
+
+.terminal-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 1.2em;
+  background-color: var(--color-terminal-green);
+  animation: blink 1s step-end infinite;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+@keyframes blink {
+  from, to { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.markdown-body {
+  @apply space-y-4;
+}
+
+.markdown-body p {
+  @apply leading-relaxed;
+}
+
+.markdown-body pre {
+  @apply bg-black/50 p-4 rounded border border-white/10 overflow-x-auto my-4;
+}
+
+.markdown-body code {
+  @apply font-mono text-terminal-blue;
+}
+
+.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+  @apply font-bold text-terminal-green uppercase tracking-wider mt-6 mb-2;
+}
+
+.markdown-body ul {
+  @apply list-disc list-inside space-y-1;
+}
+

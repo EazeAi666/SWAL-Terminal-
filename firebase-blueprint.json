@@ -1,0 +1,58 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the platform",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "sudo"] },
+        "lastSeen": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "displayName", "role"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "A chat message",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "senderUid": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderRole": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "branchId": { "type": "string" }
+      },
+      "required": ["text", "senderUid", "timestamp", "branchId"]
+    },
+    "Branch": {
+      "title": "Branch",
+      "description": "A learning topic or chat room",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/branches/{branchId}": {
+      "schema": "Branch",
+      "description": "Learning topics"
+    },
+    "/branches/{branchId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Messages within a branch"
+    }
+  }
+}

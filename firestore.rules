@@ -1,0 +1,104 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {uid}
+    // Fields:
+    //   - uid: string (required)
+    //   - displayName: string (required)
+    //   - photoURL: string (optional)
+    //   - role: string (required, 'user' | 'sudo')
+    //   - lastSeen: timestamp (optional)
+    //
+    // Collection: branches
+    // Document ID: {branchId}
+    // Fields:
+    //   - id: string (required)
+    //   - name: string (required)
+    //   - description: string (optional)
+    //   - createdBy: string (optional)
+    //   - createdAt: timestamp (optional)
+    //
+    // Collection: branches/{branchId}/messages
+    // Document ID: {messageId}
+    // Fields:
+    //   - text: string (required)
+    //   - senderUid: string (required)
+    //   - senderName: string (required)
+    //   - senderRole: string (required)
+    //   - timestamp: timestamp (required)
+    //   - branchId: string (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'sudo' ||
+         request.auth.token.email == "isrealadesina3@gmail.com");
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'displayName', 'role']) &&
+             data.uid == request.auth.uid &&
+             data.displayName is string && data.displayName.size() > 0 && data.displayName.size() < 100 &&
+             data.role in ['user', 'sudo'];
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasAll(['text', 'senderUid', 'senderName', 'senderRole', 'timestamp', 'branchId']) &&
+             data.text is string && data.text.size() > 0 && data.text.size() < 5000 &&
+             data.senderUid == request.auth.uid &&
+             data.senderName is string &&
+             data.senderRole is string &&
+             data.timestamp is timestamp &&
+             data.branchId is string;
+    }
+
+    function isValidBranch(data) {
+      return data.keys().hasAll(['id', 'name']) &&
+             data.id is string &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && 
+                      (request.resource.data.role == 'user' || isAdmin());
+      allow update: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) &&
+                      (request.resource.data.role == resource.data.role || isAdmin());
+    }
+
+    match /branches/{branchId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidBranch(request.resource.data) && isAdmin();
+      allow update: if isAuthenticated() && isAdmin();
+      allow delete: if isAuthenticated() && isAdmin();
+
+      match /messages/{messageId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && isValidMessage(request.resource.data);
+        allow update: if false; // Messages are immutable for now
+        allow delete: if isAuthenticated() && (request.auth.uid == resource.data.senderUid || isAdmin());
+      }
+    }
+  }
+}

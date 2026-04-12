@@ -1,11 +1,32 @@
-<div align="center">
+# The SWAL Terminal
+> "Execute. Learn. Connect."
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+A high-performance chat and collaborative learning platform designed to bridge technical knowledge gaps through an interactive terminal-style interface.
 
-  <h1>Built with AI Studio</h2>
+## 🚀 Overview
+**The SWAL Terminal** transforms traditional learning. By utilizing a command-line interface (CLI) aesthetic, it provides an environment where teaching and studying feel like active development.
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## 🛠 Core Features
+- **Terminal Chat:** A monospaced UI with built-in syntax highlighting.
+- **Topic Branches:** Using Git-inspired naming conventions to organize study sessions.
+- **Knowledge Archives:** Converting real-time discussions into permanent documentation.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## 📦 Technical Architecture
+- **Frontend:** React.js
+- **Backend:** Firebase integration (with Python-ready logic)
+- **Styling:** Developer-centric dark mode UI
 
-</div>
+## 🛠 Quick Start
+```bash
+git clone https://github.com/swal-terminal.git
+npm install
+npm start
+```
+
+## 📄 License
+Created by Adesina Isreal Ayomide. All rights reserved under the Visual Eaze Studios / SWAL-Learn umbrella.
+*"Building the future, one command at a time."*
+
+---
+**Adesina Isreal Ayomide**
+Visual Eaze Studios • SWAL-Learn Ecosystem © 2026
