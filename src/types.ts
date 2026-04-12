@@ -1,6 +1,6 @@
 import { Timestamp } from 'firebase/firestore';
 
-export type UserRole = 'user' | 'sudo';
+export type UserRole = 'user' | 'teacher' | 'sudo';
 
 export interface UserProfile {
   uid: string;
@@ -8,6 +8,7 @@ export interface UserProfile {
   photoURL: string;
   role: UserRole;
   lastSeen: Timestamp;
+  terminalId: string;
 }
 
 export interface Branch {
@@ -69,4 +70,19 @@ export interface AiTutoringSession {
   topic: string;
   messages: { role: 'user' | 'model'; text: string; timestamp: number }[];
   createdAt: Timestamp;
+}
+
+export interface Announcement {
+  id: string;
+  text: string;
+  authorName: string;
+  timestamp: Timestamp;
+}
+
+export interface DirectMessage {
+  id: string;
+  text: string;
+  senderUid: string;
+  receiverUid: string;
+  timestamp: Timestamp;
 }

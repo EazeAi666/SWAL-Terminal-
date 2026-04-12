@@ -52,11 +52,28 @@ service cloud.firestore {
          request.auth.token.email == "isrealadesina3@gmail.com");
     }
 
+    function isTeacher() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher' || isAdmin());
+    }
+
     function isValidUser(data) {
-      return data.keys().hasAll(['uid', 'displayName', 'role']) &&
+      return data.keys().hasAll(['uid', 'displayName', 'role', 'terminalId']) &&
              data.uid == request.auth.uid &&
              data.displayName is string && data.displayName.size() > 0 && data.displayName.size() < 100 &&
-             data.role in ['user', 'sudo'];
+             data.role in ['user', 'teacher', 'sudo'] &&
+             data.terminalId is string;
+    }
+
+    function isValidAnnouncement(data) {
+      return data.keys().hasAll(['text', 'timestamp']) &&
+             data.text is string && data.text.size() > 0 && data.text.size() < 1000;
+    }
+
+    function isValidDM(data) {
+      return data.keys().hasAll(['text', 'senderUid', 'receiverUid', 'timestamp']) &&
+             data.text is string && data.text.size() > 0 && data.text.size() < 2000 &&
+             data.senderUid == request.auth.uid;
     }
 
     function isValidMessage(data) {
@@ -83,8 +100,20 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isValidUser(request.resource.data) && 
                       (request.resource.data.role == 'user' || isAdmin());
-      allow update: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) &&
+      allow update: if isAuthenticated() && (isOwner(userId) || isAdmin()) && isValidUser(request.resource.data) &&
                       (request.resource.data.role == resource.data.role || isAdmin());
+    }
+
+    match /announcements/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /directMessages/{id} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.senderUid || request.auth.uid == resource.data.receiverUid || isAdmin());
+      allow create: if isAuthenticated() && isValidDM(request.resource.data);
+      allow update: if false;
+      allow delete: if isAdmin();
     }
 
     match /branches/{branchId} {
@@ -103,17 +132,17 @@ service cloud.firestore {
 
     match /courses/{courseId} {
       allow read: if isAuthenticated();
-      allow write: if isAdmin();
+      allow write: if isTeacher();
 
       match /modules/{moduleId} {
         allow read: if isAuthenticated();
-        allow write: if isAdmin();
+        allow write: if isTeacher();
       }
     }
 
     match /quizzes/{quizId} {
       allow read: if isAuthenticated();
-      allow write: if isAdmin();
+      allow write: if isTeacher();
     }
 
     match /userProgress/{progressId} {

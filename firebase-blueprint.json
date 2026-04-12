@@ -8,10 +8,35 @@
         "uid": { "type": "string" },
         "displayName": { "type": "string" },
         "photoURL": { "type": "string" },
-        "role": { "type": "string", "enum": ["user", "sudo"] },
-        "lastSeen": { "type": "string", "format": "date-time" }
+        "role": { "type": "string", "enum": ["user", "teacher", "sudo"] },
+        "lastSeen": { "type": "string", "format": "date-time" },
+        "terminalId": { "type": "string", "description": "Short public ID for connecting" }
       },
-      "required": ["uid", "displayName", "role"]
+      "required": ["uid", "displayName", "role", "terminalId"]
+    },
+    "Announcement": {
+      "title": "Announcement",
+      "description": "Global announcement from admin",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "text": { "type": "string" },
+        "authorName": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["text", "timestamp"]
+    },
+    "DirectMessage": {
+      "title": "DirectMessage",
+      "description": "Private message between users",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "senderUid": { "type": "string" },
+        "receiverUid": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["text", "senderUid", "receiverUid", "timestamp"]
     },
     "Message": {
       "title": "Message",
@@ -147,6 +172,14 @@
     "/aiTutoringSessions/{sessionId}": {
       "schema": "AiTutoringSession",
       "description": "AI tutoring logs"
+    },
+    "/announcements/{announcementId}": {
+      "schema": "Announcement",
+      "description": "Global admin announcements"
+    },
+    "/directMessages/{dmId}": {
+      "schema": "DirectMessage",
+      "description": "Private user chats"
     }
   }
 }

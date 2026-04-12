@@ -18,12 +18,14 @@ export async function signInWithGoogle() {
     const userSnap = await getDoc(userRef);
     
     if (!userSnap.exists()) {
+      const terminalId = `swal-${Math.random().toString(36).substring(2, 8)}`;
       await setDoc(userRef, {
         uid: user.uid,
         displayName: user.displayName || 'Anonymous User',
         photoURL: user.photoURL || '',
         role: user.email === 'isrealadesina3@gmail.com' ? 'sudo' : 'user',
-        lastSeen: serverTimestamp()
+        lastSeen: serverTimestamp(),
+        terminalId
       });
     } else {
       await setDoc(userRef, { lastSeen: serverTimestamp() }, { merge: true });

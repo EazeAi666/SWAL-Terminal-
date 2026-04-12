@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { Branch, Message, UserProfile } from '../types';
+import { Branch, Message, UserProfile, Announcement } from '../types';
 import { collection, onSnapshot, query, orderBy, limit, addDoc, serverTimestamp, doc, setDoc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import ReactMarkdown from 'react-markdown';
 import { format } from 'date-fns';
-import { Send, Bot, User, ShieldCheck } from 'lucide-react';
+import { Send, Bot, User, ShieldCheck, Megaphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI } from '@google/genai';
 
@@ -18,12 +18,19 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export default function Chat({ branch, profile, isTutorMode = false }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [inputText, setInputText] = useState('');
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [tutorSessionId, setTutorSessionId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Announcements listener
+    const qAnn = query(collection(db, 'announcements'), orderBy('timestamp', 'desc'), limit(3));
+    const unsubscribeAnn = onSnapshot(qAnn, (snapshot) => {
+      setAnnouncements(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Announcement)));
+    });
+
     if (isTutorMode && profile) {
       // Initialize or fetch tutor session
       const sessionId = `${profile.uid}_${branch.id}_tutor`;
@@ -188,6 +195,20 @@ export default function Chat({ branch, profile, isTutorMode = false }: ChatProps
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Announcements */}
+      {!isTutorMode && announcements.length > 0 && (
+        <div className="px-4 py-2 bg-terminal-green/5 border-b border-terminal-green/10 space-y-2">
+          {announcements.map(ann => (
+            <div key={ann.id} className="flex items-start gap-2 text-[10px] text-terminal-green/80 animate-pulse">
+              <Megaphone className="w-3 h-3 mt-0.5 flex-shrink-0" />
+              <p>
+                <span className="font-bold uppercase">[BROADCAST]:</span> {ann.text}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div 
         ref={scrollRef}
         className="flex-1 overflow-y-auto p-4 space-y-6 scroll-smooth"

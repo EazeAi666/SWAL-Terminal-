@@ -4,14 +4,16 @@ import { collection, onSnapshot, query, orderBy, addDoc, serverTimestamp } from 
 import { db, auth } from '../firebase';
 import Chat from './Chat';
 import CourseSystem from './CourseSystem';
-import { Terminal as TerminalIcon, Hash, Users, Settings, LogOut, ChevronRight, Command, BookOpen, BrainCircuit } from 'lucide-react';
+import AdminPanel from './AdminPanel';
+import DirectMessageSystem from './DirectMessageSystem';
+import { Terminal as TerminalIcon, Hash, Users, Settings, LogOut, ChevronRight, Command, BookOpen, BrainCircuit, Shield, MessageSquare } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface TerminalProps {
   profile: UserProfile | null;
 }
 
-type ViewMode = 'chat' | 'courses' | 'tutor';
+type ViewMode = 'chat' | 'courses' | 'tutor' | 'admin' | 'messages';
 
 export default function Terminal({ profile }: TerminalProps) {
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -62,6 +64,16 @@ export default function Terminal({ profile }: TerminalProps) {
     } else if (cmd === 'tutor') {
       setViewMode('tutor');
       setHistory(prev => [...prev, 'Initializing AI Tutoring Session...']);
+    } else if (cmd === 'admin' || cmd === 'sudo') {
+      if (profile?.role === 'sudo') {
+        setViewMode('admin');
+        setHistory(prev => [...prev, 'Entering Admin Terminal...']);
+      } else {
+        setHistory(prev => [...prev, 'error: permission denied. User not in sudoers file.']);
+      }
+    } else if (cmd === 'msg' || cmd === 'messages') {
+      setViewMode('messages');
+      setHistory(prev => [...prev, 'Opening Secure Communications...']);
     } else if (cmd === 'help') {
       setHistory(prev => [...prev, 
         'Available commands:',
@@ -70,6 +82,8 @@ export default function Terminal({ profile }: TerminalProps) {
         '  courses - Open the structured course system',
         '  chat - Return to branch chat',
         '  tutor - Start a dedicated AI tutoring session',
+        '  msg - Open secure direct messages',
+        '  admin - Root admin panel (sudo only)',
         '  clear - Clear terminal history',
         '  whoami - Show current user info',
         '  logout - Terminate session'
@@ -80,6 +94,7 @@ export default function Terminal({ profile }: TerminalProps) {
       setHistory(prev => [...prev, 
         `User: ${profile?.displayName}`,
         `Role: ${profile?.role}`,
+        `Terminal ID: ${profile?.terminalId}`,
         `UID: ${profile?.uid}`
       ]);
     } else if (cmd === 'logout') {
@@ -123,6 +138,15 @@ export default function Terminal({ profile }: TerminalProps) {
                 <span>Courses</span>
               </button>
               <button
+                onClick={() => setViewMode('messages')}
+                className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors ${
+                  viewMode === 'messages' ? 'bg-terminal-green/10 text-terminal-green' : 'text-terminal-text/60 hover:text-terminal-green hover:bg-terminal-green/5'
+                }`}
+              >
+                <MessageSquare className="w-3 h-3" />
+                <span>Messages</span>
+              </button>
+              <button
                 onClick={() => setViewMode('tutor')}
                 className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors ${
                   viewMode === 'tutor' ? 'bg-terminal-green/10 text-terminal-green' : 'text-terminal-text/60 hover:text-terminal-green hover:bg-terminal-green/5'
@@ -131,6 +155,17 @@ export default function Terminal({ profile }: TerminalProps) {
                 <BrainCircuit className="w-3 h-3" />
                 <span>AI Tutor</span>
               </button>
+              {profile?.role === 'sudo' && (
+                <button
+                  onClick={() => setViewMode('admin')}
+                  className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors ${
+                    viewMode === 'admin' ? 'bg-terminal-green/10 text-terminal-green' : 'text-terminal-text/60 hover:text-terminal-green hover:bg-terminal-green/5'
+                  }`}
+                >
+                  <Shield className="w-3 h-3" />
+                  <span>Admin Panel</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -165,7 +200,7 @@ export default function Terminal({ profile }: TerminalProps) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold truncate text-terminal-green">{profile?.displayName}</p>
-              <p className="text-[10px] uppercase text-terminal-green/40 tracking-tighter">{profile?.role}</p>
+              <p className="text-[10px] uppercase text-terminal-green/40 tracking-tighter">ID: {profile?.terminalId}</p>
             </div>
           </div>
           <button 
@@ -186,7 +221,9 @@ export default function Terminal({ profile }: TerminalProps) {
             <span className="text-terminal-green/40">path:</span>
             <span className="text-terminal-green">
               {viewMode === 'chat' ? `/branches/${activeBranch?.name}` : 
-               viewMode === 'courses' ? '/system/courses' : '/system/ai-tutor'}
+               viewMode === 'courses' ? '/system/courses' : 
+               viewMode === 'messages' ? '/system/messages' :
+               viewMode === 'admin' ? '/system/root' : '/system/ai-tutor'}
             </span>
           </div>
           <div className="flex items-center gap-4">
@@ -203,6 +240,10 @@ export default function Terminal({ profile }: TerminalProps) {
             <Chat branch={activeBranch} profile={profile} />
           ) : viewMode === 'courses' ? (
             <CourseSystem profile={profile} />
+          ) : viewMode === 'messages' ? (
+            <DirectMessageSystem profile={profile} />
+          ) : viewMode === 'admin' ? (
+            <AdminPanel profile={profile} />
           ) : viewMode === 'tutor' ? (
             <Chat branch={activeBranch || branches[0]} profile={profile} isTutorMode={true} />
           ) : (
