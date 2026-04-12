@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Branch, Message, UserProfile } from '../types';
-import { collection, onSnapshot, query, orderBy, limit, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, limit, addDoc, serverTimestamp, doc, setDoc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import ReactMarkdown from 'react-markdown';
 import { format } from 'date-fns';
@@ -11,32 +11,69 @@ import { GoogleGenAI } from '@google/genai';
 interface ChatProps {
   branch: Branch;
   profile: UserProfile | null;
+  isTutorMode?: boolean;
 }
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-export default function Chat({ branch, profile }: ChatProps) {
+export default function Chat({ branch, profile, isTutorMode = false }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isAiThinking, setIsAiThinking] = useState(false);
+  const [tutorSessionId, setTutorSessionId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const q = query(
-      collection(db, 'branches', branch.id, 'messages'),
-      orderBy('timestamp', 'asc'),
-      limit(100)
-    );
+    if (isTutorMode && profile) {
+      // Initialize or fetch tutor session
+      const sessionId = `${profile.uid}_${branch.id}_tutor`;
+      setTutorSessionId(sessionId);
+      
+      const unsubscribe = onSnapshot(doc(db, 'aiTutoringSessions', sessionId), (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const msgs = (data.messages || []).map((m: any, i: number) => ({
+            id: `tutor_${i}`,
+            text: m.text,
+            senderUid: m.role === 'user' ? profile.uid : 'ai-root',
+            senderName: m.role === 'user' ? profile.displayName : 'ROOT',
+            senderRole: m.role === 'user' ? profile.role : 'sudo',
+            timestamp: Timestamp.fromMillis(m.timestamp),
+            branchId: branch.id
+          } as Message));
+          setMessages(msgs);
+        } else {
+          setDoc(doc(db, 'aiTutoringSessions', sessionId), {
+            uid: profile.uid,
+            branchId: branch.id,
+            topic: branch.name,
+            messages: [{
+              role: 'model',
+              text: `Hello ${profile.displayName}! I am ROOT, your dedicated tutor for the **${branch.name}** branch. How can I help you master this topic today?`,
+              timestamp: Date.now()
+            }],
+            createdAt: serverTimestamp()
+          });
+        }
+      });
+      return () => unsubscribe();
+    } else {
+      const q = query(
+        collection(db, 'branches', branch.id, 'messages'),
+        orderBy('timestamp', 'asc'),
+        limit(100)
+      );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
-      setMessages(msgs);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, `branches/${branch.id}/messages`);
-    });
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
+        setMessages(msgs);
+      }, (error) => {
+        handleFirestoreError(error, OperationType.GET, `branches/${branch.id}/messages`);
+      });
 
-    return () => unsubscribe();
-  }, [branch.id]);
+      return () => unsubscribe();
+    }
+  }, [branch.id, isTutorMode, profile]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -51,22 +88,68 @@ export default function Chat({ branch, profile }: ChatProps) {
     const text = inputText.trim();
     setInputText('');
 
+    if (isTutorMode && tutorSessionId) {
+      try {
+        const sessionRef = doc(db, 'aiTutoringSessions', tutorSessionId);
+        await updateDoc(sessionRef, {
+          messages: arrayUnion({
+            role: 'user',
+            text,
+            timestamp: Date.now()
+          })
+        });
+        handleAiTutorResponse(text);
+      } catch (error) {
+        console.error('Tutor Error:', error);
+      }
+    } else {
+      try {
+        await addDoc(collection(db, 'branches', branch.id, 'messages'), {
+          text,
+          senderUid: profile.uid,
+          senderName: profile.displayName,
+          senderRole: profile.role,
+          timestamp: serverTimestamp(),
+          branchId: branch.id
+        });
+
+        if (text.toLowerCase().startsWith('@root') || text.toLowerCase().startsWith('@ai')) {
+          handleAiResponse(text);
+        }
+      } catch (error) {
+        handleFirestoreError(error, OperationType.WRITE, `branches/${branch.id}/messages`);
+      }
+    }
+  };
+
+  const handleAiTutorResponse = async (userPrompt: string) => {
+    if (!tutorSessionId) return;
+    setIsAiThinking(true);
     try {
-      await addDoc(collection(db, 'branches', branch.id, 'messages'), {
-        text,
-        senderUid: profile.uid,
-        senderName: profile.displayName,
-        senderRole: profile.role,
-        timestamp: serverTimestamp(),
-        branchId: branch.id
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: userPrompt,
+        config: {
+          systemInstruction: `You are 'ROOT', a dedicated 1-on-1 tutor. 
+          Topic: ${branch.name}. 
+          Goal: Provide personalized explanations, code examples, and small exercises. 
+          Be encouraging but technical. Use markdown.`
+        }
       });
 
-      // AI Trigger
-      if (text.toLowerCase().startsWith('@root') || text.toLowerCase().startsWith('@ai')) {
-        handleAiResponse(text);
-      }
+      const aiText = response.text;
+      const sessionRef = doc(db, 'aiTutoringSessions', tutorSessionId);
+      await updateDoc(sessionRef, {
+        messages: arrayUnion({
+          role: 'model',
+          text: aiText,
+          timestamp: Date.now()
+        })
+      });
     } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, `branches/${branch.id}/messages`);
+      console.error('AI Tutor Error:', error);
+    } finally {
+      setIsAiThinking(false);
     }
   };
 

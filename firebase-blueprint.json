@@ -39,6 +39,80 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "name"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "A structured learning path",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "order": { "type": "number" }
+      },
+      "required": ["id", "title", "order"]
+    },
+    "Module": {
+      "title": "Module",
+      "description": "A module within a course",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "courseId": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "order": { "type": "number" },
+        "githubLink": { "type": "string" }
+      },
+      "required": ["id", "courseId", "title", "order"]
+    },
+    "Quiz": {
+      "title": "Quiz",
+      "description": "A quiz for a module",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "moduleId": { "type": "string" },
+        "questions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "question": { "type": "string" },
+              "options": { "type": "array", "items": { "type": "string" } },
+              "correctAnswer": { "type": "number" }
+            }
+          }
+        }
+      },
+      "required": ["id", "moduleId", "questions"]
+    },
+    "UserProgress": {
+      "title": "UserProgress",
+      "description": "Tracks user progress in courses",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "courseId": { "type": "string" },
+        "completedModules": { "type": "array", "items": { "type": "string" } },
+        "quizScores": { "type": "object" },
+        "currentModuleId": { "type": "string" }
+      },
+      "required": ["uid", "courseId"]
+    },
+    "AiTutoringSession": {
+      "title": "AiTutoringSession",
+      "description": "A dedicated AI tutoring session",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uid": { "type": "string" },
+        "branchId": { "type": "string" },
+        "topic": { "type": "string" },
+        "messages": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "uid", "branchId"]
     }
   },
   "firestore": {
@@ -53,6 +127,26 @@
     "/branches/{branchId}/messages/{messageId}": {
       "schema": "Message",
       "description": "Messages within a branch"
+    },
+    "/courses/{courseId}": {
+      "schema": "Course",
+      "description": "Learning courses"
+    },
+    "/courses/{courseId}/modules/{moduleId}": {
+      "schema": "Module",
+      "description": "Modules in a course"
+    },
+    "/quizzes/{quizId}": {
+      "schema": "Quiz",
+      "description": "Quizzes for modules"
+    },
+    "/userProgress/{progressId}": {
+      "schema": "UserProgress",
+      "description": "User learning progress"
+    },
+    "/aiTutoringSessions/{sessionId}": {
+      "schema": "AiTutoringSession",
+      "description": "AI tutoring logs"
     }
   }
 }

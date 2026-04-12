@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { doc, onSnapshot, collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, onSnapshot, collection, getDocs, addDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { auth, db, signInWithGoogle } from './firebase';
 import { UserProfile } from './types';
 import Terminal from './components/Terminal';
@@ -53,7 +53,65 @@ export default function App() {
           }
         }
       };
+
+      const seedCourses = async () => {
+        const coursesSnap = await getDocs(collection(db, 'courses'));
+        if (coursesSnap.empty) {
+          const webDevCourse = {
+            id: 'web-dev-101',
+            title: 'Introduction to Web Development for Beginners',
+            description: 'Learn the basics of HTML, CSS, and JavaScript.',
+            order: 1
+          };
+          
+          const courseRef = doc(db, 'courses', webDevCourse.id);
+          await setDoc(courseRef, webDevCourse);
+
+          const modules = [
+            {
+              id: 'html-basics',
+              courseId: webDevCourse.id,
+              title: 'HTML Basics',
+              content: 'HTML stands for HyperText Markup Language. It is the skeleton of all web pages.',
+              order: 1,
+              githubLink: 'https://github.com/swal-learn/html-basics'
+            },
+            {
+              id: 'css-styling',
+              courseId: webDevCourse.id,
+              title: 'CSS Styling',
+              content: 'CSS stands for Cascading Style Sheets. It is used to style the HTML skeleton.',
+              order: 2,
+              githubLink: 'https://github.com/swal-learn/css-styling'
+            }
+          ];
+
+          for (const m of modules) {
+            await setDoc(doc(db, 'courses', webDevCourse.id, 'modules', m.id), m);
+          }
+
+          const quizzes = [
+            {
+              id: 'quiz-html',
+              moduleId: 'html-basics',
+              questions: [
+                {
+                  question: 'What does HTML stand for?',
+                  options: ['HyperText Markup Language', 'High Tech Modern Language', 'Hyperlink Text Management', 'Home Tool Markup Language'],
+                  correctAnswer: 0
+                }
+              ]
+            }
+          ];
+
+          for (const q of quizzes) {
+            await setDoc(doc(db, 'quizzes', q.id), q);
+          }
+        }
+      };
+
       seedBranches();
+      seedCourses();
 
       return () => unsubscribe();
     }
