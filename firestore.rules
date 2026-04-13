@@ -33,6 +33,17 @@ service cloud.firestore {
     //   - timestamp: timestamp (required)
     //   - branchId: string (required)
     //
+    // Collection: userProgress
+    // Document ID: {uid}_{courseId}
+    // Fields:
+    //   - uid: string (required)
+    //   - courseId: string (required)
+    //   - completedModules: list (required)
+    //   - quizScores: map (required)
+    //   - currentModuleId: string (optional)
+    //   - certificateIssued: bool (optional)
+    //   - certificateDate: timestamp (optional)
+    //
     // ===============================================================
 
     // ===============================================================
@@ -95,6 +106,16 @@ service cloud.firestore {
              data.name is string && data.name.size() > 0 && data.name.size() < 100;
     }
 
+    function isValidUserProgress(data) {
+      return data.keys().hasAll(['uid', 'courseId', 'completedModules', 'quizScores']) &&
+             data.uid == request.auth.uid &&
+             data.courseId is string &&
+             data.completedModules is list &&
+             data.quizScores is map &&
+             (!('certificateIssued' in data) || data.certificateIssued is bool) &&
+             (!('certificateDate' in data) || data.certificateDate is timestamp);
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
@@ -150,8 +171,8 @@ service cloud.firestore {
 
     match /userProgress/{progressId} {
       allow read: if isAuthenticated() && (request.auth.uid == resource.data.uid || isAdmin());
-      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
-      allow update: if isAuthenticated() && (request.auth.uid == resource.data.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidUserProgress(request.resource.data);
+      allow update: if isAuthenticated() && (request.auth.uid == resource.data.uid || isAdmin()) && isValidUserProgress(request.resource.data);
     }
 
     match /aiTutoringSessions/{sessionId} {
