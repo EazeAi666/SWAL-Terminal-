@@ -46,10 +46,14 @@ export default function App() {
               { name: 'react-hooks', description: 'Deep dive into modern React development.' },
               { name: 'python-core', description: 'Mastering the fundamentals of Python.' },
               { name: 'ui-design', description: 'Crafting polished and functional interfaces.' },
+              { name: 'english-it', description: 'Mastering professional communication in tech.' },
               { name: 'cybersecurity', description: 'Defending the digital frontier.' },
               { name: 'ethical-hacking', description: 'Thinking like a hacker to build better defenses.' },
+              { name: 'python-core', description: 'Mastering the fundamentals of Python.' },
               { name: 'data-science', description: 'Extracting insights from complex data.' },
-              { name: 'cloud-computing', description: 'Scaling applications in the cloud.' }
+              { name: 'cloud-computing', description: 'Scaling applications in the cloud.' },
+              { name: 'react-mastery', description: 'Building complex apps with React.' },
+              { name: 'backend-dev', description: 'Building robust server-side applications.' }
             ];
 
             for (const b of initialBranches) {
@@ -98,7 +102,76 @@ export default function App() {
                     title: 'CSS Styling',
                     content: 'CSS stands for Cascading Style Sheets. It is used to style the HTML skeleton.',
                     order: 2,
-                    githubLink: 'https://github.com/swal-learn/css-styling'
+                    githubLink: 'https://github.com/swal-learn/css-styling',
+                    quiz: {
+                      id: 'quiz-css',
+                      questions: [
+                        {
+                          question: 'Which property is used to change the background color?',
+                          options: ['color', 'bgcolor', 'background-color', 'canvas-color'],
+                          correctAnswer: 2
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    id: 'js-intro',
+                    title: 'JavaScript Fundamentals',
+                    content: 'JavaScript is the programming language of the web. It adds interactivity to your pages.',
+                    order: 3,
+                    githubLink: 'https://github.com/swal-learn/js-basics',
+                    quiz: {
+                      id: 'quiz-js-1',
+                      questions: [
+                        {
+                          question: 'Which keyword is used to declare a variable in modern JavaScript?',
+                          options: ['var', 'let', 'const', 'Both let and const'],
+                          correctAnswer: 3
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                id: 'english-it-101',
+                title: 'English for IT Professionals',
+                description: 'Communicate effectively in a global tech environment.',
+                order: 2,
+                modules: [
+                  {
+                    id: 'tech-vocabulary',
+                    title: 'Technical Vocabulary',
+                    content: 'Learn essential terms used in software development, networking, and project management.',
+                    order: 1,
+                    githubLink: 'https://github.com/swal-learn/english-it-vocab',
+                    quiz: {
+                      id: 'quiz-english-1',
+                      questions: [
+                        {
+                          question: 'What does "Deployment" mean in IT?',
+                          options: ['Writing code', 'Releasing software to a production environment', 'Fixing a bug', 'Deleting a database'],
+                          correctAnswer: 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    id: 'it-communication',
+                    title: 'Professional Communication',
+                    content: 'Master the art of writing emails, documentation, and participating in stand-up meetings.',
+                    order: 2,
+                    githubLink: 'https://github.com/swal-learn/it-comm',
+                    quiz: {
+                      id: 'quiz-english-2',
+                      questions: [
+                        {
+                          question: 'What is a "Stand-up" meeting?',
+                          options: ['A meeting where everyone stands', 'A short daily meeting to discuss progress and blockers', 'A long weekly planning session', 'A social gathering'],
+                          correctAnswer: 1
+                        }
+                      ]
+                    }
                   }
                 ]
               },
@@ -106,7 +179,7 @@ export default function App() {
                 id: 'cyber-101',
                 title: 'Cybersecurity Fundamentals',
                 description: 'Protecting systems, networks, and programs from digital attacks.',
-                order: 2,
+                order: 3,
                 modules: [
                   {
                     id: 'intro-security',
@@ -128,10 +201,85 @@ export default function App() {
                 ]
               },
               {
+                id: 'python-101',
+                title: 'Introduction to Python',
+                description: 'Start your journey with the most versatile programming language.',
+                order: 4,
+                modules: [
+                  {
+                    id: 'python-basics',
+                    title: 'Python Syntax and Variables',
+                    content: 'Learn how to write your first Python script and work with different data types.',
+                    order: 1,
+                    githubLink: 'https://github.com/swal-learn/python-basics',
+                    quiz: {
+                      id: 'quiz-python-1',
+                      questions: [
+                        {
+                          question: 'How do you print "Hello World" in Python?',
+                          options: ['echo("Hello World")', 'print("Hello World")', 'console.log("Hello World")', 'System.out.println("Hello World")'],
+                          correctAnswer: 1
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                id: 'react-101',
+                title: 'Modern Web Development with React',
+                description: 'Build dynamic and responsive user interfaces with React.',
+                order: 5,
+                modules: [
+                  {
+                    id: 'react-components',
+                    title: 'Components and Props',
+                    content: 'Understand the building blocks of React applications.',
+                    order: 1,
+                    githubLink: 'https://github.com/swal-learn/react-basics',
+                    quiz: {
+                      id: 'quiz-react-1',
+                      questions: [
+                        {
+                          question: 'What are the two main ways to pass data in React?',
+                          options: ['State and Props', 'Functions and Variables', 'HTML and CSS', 'JSON and XML'],
+                          correctAnswer: 0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                id: 'node-101',
+                title: 'Backend Development with Node.js',
+                description: 'Build scalable server-side applications with JavaScript.',
+                order: 6,
+                modules: [
+                  {
+                    id: 'node-intro',
+                    title: 'Introduction to Node.js',
+                    content: 'Node.js is a JavaScript runtime built on Chromes V8 JavaScript engine.',
+                    order: 1,
+                    githubLink: 'https://github.com/swal-learn/node-basics',
+                    quiz: {
+                      id: 'quiz-node-1',
+                      questions: [
+                        {
+                          question: 'What is Node.js?',
+                          options: ['A programming language', 'A JavaScript runtime', 'A database', 'A CSS framework'],
+                          correctAnswer: 1
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
                 id: 'hacking-101',
                 title: 'Ethical Hacking & Penetration Testing',
                 description: 'Learn the tools and techniques used by security professionals to find vulnerabilities.',
-                order: 3,
+                order: 7,
                 modules: [
                   {
                     id: 'hacking-intro',
@@ -156,7 +304,7 @@ export default function App() {
                 id: 'ds-101',
                 title: 'Python for Data Science',
                 description: 'Using Python to analyze data and build predictive models.',
-                order: 4,
+                order: 8,
                 modules: [
                   {
                     id: 'numpy-pandas',
