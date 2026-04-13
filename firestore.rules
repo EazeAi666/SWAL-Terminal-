@@ -47,14 +47,17 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAuthenticated() && 
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'sudo' ||
-         request.auth.token.email == "isrealadesina3@gmail.com");
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'sudo') ||
+        (request.auth.token.email == "isrealadesina3@gmail.com" && request.auth.token.email_verified == true)
+      );
     }
 
     function isTeacher() {
-      return isAuthenticated() && 
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher' || isAdmin());
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher') || 
+        isAdmin()
+      );
     }
 
     function isValidUser(data) {

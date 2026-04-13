@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, query, orderBy, onSnapshot, doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, getDoc, setDoc, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Course, Module, Quiz, UserProgress, UserProfile } from '../types';
 import { BookOpen, CheckCircle, Lock, Play, Github, Award } from 'lucide-react';
@@ -105,10 +105,25 @@ export default function CourseSystem({ profile }: CourseSystemProps) {
 
     if (passed) {
       const progressId = `${profile.uid}_${activeCourse.id}`;
-      await updateDoc(doc(db, 'userProgress', progressId), {
-        completedModules: arrayUnion(activeModule.id),
+      const newCompletedModules = [...(progress?.completedModules || [])];
+      if (!newCompletedModules.includes(activeModule.id)) {
+        newCompletedModules.push(activeModule.id);
+      }
+
+      const allModuleIds = modules.map(m => m.id);
+      const isCourseComplete = allModuleIds.every(id => newCompletedModules.includes(id));
+
+      const updateData: any = {
+        completedModules: newCompletedModules,
         [`quizScores.${activeModule.id}`]: score
-      });
+      };
+
+      if (isCourseComplete && !progress?.certificateIssued) {
+        updateData.certificateIssued = true;
+        updateData.certificateDate = serverTimestamp();
+      }
+
+      await updateDoc(doc(db, 'userProgress', progressId), updateData);
     }
   };
 
@@ -187,6 +202,25 @@ export default function CourseSystem({ profile }: CourseSystemProps) {
             <div className="markdown-body text-terminal-text/90 leading-relaxed">
               <ReactMarkdown>{activeModule.content}</ReactMarkdown>
             </div>
+
+            {/* Certificate Section */}
+            {progress?.certificateIssued && (
+              <div className="mt-8 p-8 border-2 border-terminal-green bg-terminal-green/5 rounded-lg text-center space-y-4 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-terminal-green animate-pulse" />
+                <Award className="w-16 h-16 text-terminal-green mx-auto" />
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold text-terminal-green uppercase tracking-tighter">Certificate of Achievement</h2>
+                  <p className="text-xs text-terminal-text/60 uppercase tracking-widest">This certifies that</p>
+                  <p className="text-xl font-bold text-terminal-text border-b border-terminal-green/20 inline-block px-4 pb-1">{profile?.displayName}</p>
+                  <p className="text-xs text-terminal-text/60 uppercase tracking-widest">has successfully completed the course</p>
+                  <p className="text-lg font-bold text-terminal-green">{activeCourse?.title}</p>
+                </div>
+                <div className="pt-4 flex justify-between items-end text-[10px] text-terminal-green/40 uppercase tracking-widest">
+                  <div>Date: {progress.certificateDate?.toDate ? progress.certificateDate.toDate().toLocaleDateString() : 'N/A'}</div>
+                  <div className="text-right">SWAL Terminal Verified</div>
+                </div>
+              </div>
+            )}
 
             {/* Quiz Section */}
             {quiz && (

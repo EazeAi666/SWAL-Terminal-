@@ -121,7 +121,9 @@
         "courseId": { "type": "string" },
         "completedModules": { "type": "array", "items": { "type": "string" } },
         "quizScores": { "type": "object" },
-        "currentModuleId": { "type": "string" }
+        "currentModuleId": { "type": "string" },
+        "certificateIssued": { "type": "boolean" },
+        "certificateDate": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "courseId"]
     },

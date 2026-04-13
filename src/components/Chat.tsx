@@ -29,6 +29,8 @@ export default function Chat({ branch, profile, isTutorMode = false }: ChatProps
     const qAnn = query(collection(db, 'announcements'), orderBy('timestamp', 'desc'), limit(3));
     const unsubscribeAnn = onSnapshot(qAnn, (snapshot) => {
       setAnnouncements(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Announcement)));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'announcements');
     });
 
     if (isTutorMode && profile) {
@@ -62,8 +64,13 @@ export default function Chat({ branch, profile, isTutorMode = false }: ChatProps
             createdAt: serverTimestamp()
           });
         }
+      }, (error) => {
+        handleFirestoreError(error, OperationType.GET, `aiTutoringSessions/${sessionId}`);
       });
-      return () => unsubscribe();
+      return () => {
+        unsubscribeAnn();
+        unsubscribe();
+      };
     } else {
       const q = query(
         collection(db, 'branches', branch.id, 'messages'),
@@ -78,7 +85,10 @@ export default function Chat({ branch, profile, isTutorMode = false }: ChatProps
         handleFirestoreError(error, OperationType.GET, `branches/${branch.id}/messages`);
       });
 
-      return () => unsubscribe();
+      return () => {
+        unsubscribeAnn();
+        unsubscribe();
+      };
     }
   }, [branch.id, isTutorMode, profile]);
 

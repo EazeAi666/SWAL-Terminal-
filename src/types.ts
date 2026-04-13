@@ -61,6 +61,8 @@ export interface UserProgress {
   completedModules: string[];
   quizScores: Record<string, number>;
   currentModuleId: string;
+  certificateIssued?: boolean;
+  certificateDate?: Timestamp;
 }
 
 export interface AiTutoringSession {

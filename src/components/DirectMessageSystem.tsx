@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { collection, query, onSnapshot, addDoc, serverTimestamp, orderBy, where, getDocs, limit } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, handleFirestoreError, OperationType } from '../firebase';
 import { UserProfile, DirectMessage } from '../types';
 import { MessageSquare, Send, Search, User, ShieldAlert } from 'lucide-react';
 import { format } from 'date-fns';
@@ -33,6 +33,8 @@ export default function DirectMessageSystem({ profile }: DirectMessageSystemProp
           }
         });
         setAllChats(Array.from(chats.values()));
+      }, (error) => {
+        handleFirestoreError(error, OperationType.GET, 'directMessages');
       });
       return () => unsubscribe();
     }
@@ -50,6 +52,8 @@ export default function DirectMessageSystem({ profile }: DirectMessageSystemProp
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DirectMessage));
         setMessages(msgs);
+      }, (error) => {
+        handleFirestoreError(error, OperationType.GET, 'directMessages_filtered');
       });
       return () => unsubscribe();
     }
