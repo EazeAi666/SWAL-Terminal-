@@ -108,11 +108,11 @@ export default function AdminPanel({ profile }: AdminPanelProps) {
             </div>
             <div className="max-h-64 overflow-y-auto space-y-2 pr-2">
               {users
-                .filter(u => u.displayName.toLowerCase().includes(searchEmail.toLowerCase()))
+                .filter(u => (u.displayName || '').toLowerCase().includes(searchEmail.toLowerCase()))
                 .map(u => (
                   <div key={u.uid} className="flex items-center justify-between p-2 border border-terminal-green/10 rounded hover:bg-terminal-green/5 transition-colors">
                     <div className="min-w-0">
-                      <p className="text-xs font-bold truncate">{u.displayName}</p>
+                      <p className="text-xs font-bold truncate">{u.displayName || 'Unknown User'}</p>
                       <p className="text-[10px] text-terminal-green/40">ID: {u.terminalId}</p>
                     </div>
                     <div className="flex gap-2">

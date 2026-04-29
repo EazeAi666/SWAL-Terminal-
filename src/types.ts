@@ -63,6 +63,7 @@ export interface UserProgress {
   currentModuleId: string;
   certificateIssued?: boolean;
   certificateDate?: Timestamp;
+  lastUpdated?: Timestamp;
 }
 
 export interface AiTutoringSession {

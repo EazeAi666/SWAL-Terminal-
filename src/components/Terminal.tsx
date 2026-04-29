@@ -18,23 +18,38 @@ type ViewMode = 'chat' | 'courses' | 'tutor' | 'admin' | 'messages';
 export default function Terminal({ profile }: TerminalProps) {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [activeBranch, setActiveBranch] = useState<Branch | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('chat');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    return (localStorage.getItem('swal_last_view') as ViewMode) || 'chat';
+  });
   const [command, setCommand] = useState('');
   const [history, setHistory] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    localStorage.setItem('swal_last_view', viewMode);
+  }, [viewMode]);
 
   useEffect(() => {
     const q = query(collection(db, 'branches'), orderBy('name'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const branchList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Branch));
       setBranches(branchList);
+      
+      const lastBranchName = localStorage.getItem('swal_last_branch');
       if (branchList.length > 0 && !activeBranch) {
-        setActiveBranch(branchList[0]);
+        const saved = branchList.find(b => b.name === lastBranchName);
+        setActiveBranch(saved || branchList[0]);
       }
     });
 
     return () => unsubscribe();
   }, [activeBranch]);
+
+  const switchBranch = (branch: Branch) => {
+    setActiveBranch(branch);
+    setViewMode('chat');
+    localStorage.setItem('swal_last_branch', branch.name);
+  };
 
   const handleCommand = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,8 +62,7 @@ export default function Terminal({ profile }: TerminalProps) {
       const branchName = cmd.split(' ')[1];
       const found = branches.find(b => b.name.toLowerCase() === branchName);
       if (found) {
-        setActiveBranch(found);
-        setViewMode('chat');
+        switchBranch(found);
         setHistory(prev => [...prev, `Switched to branch '${found.name}'`]);
       } else {
         setHistory(prev => [...prev, `error: branch '${branchName}' not found`]);
@@ -175,10 +189,7 @@ export default function Terminal({ profile }: TerminalProps) {
               {branches.map(branch => (
                 <button
                   key={branch.id}
-                  onClick={() => {
-                    setActiveBranch(branch);
-                    setViewMode('chat');
-                  }}
+                  onClick={() => switchBranch(branch)}
                   className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors ${
                     activeBranch?.id === branch.id && viewMode === 'chat'
                       ? 'bg-terminal-green/10 text-terminal-green' 
@@ -196,11 +207,11 @@ export default function Terminal({ profile }: TerminalProps) {
         <div className="p-4 border-t border-terminal-green/20 bg-black/40">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-8 h-8 rounded bg-terminal-green/20 flex items-center justify-center text-terminal-green font-bold text-xs">
-              {profile?.displayName[0]}
+              {profile?.displayName?.[0] || '?'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold truncate text-terminal-green">{profile?.displayName}</p>
-              <p className="text-[10px] uppercase text-terminal-green/40 tracking-tighter">ID: {profile?.terminalId}</p>
+              <p className="text-xs font-bold truncate text-terminal-green">{profile?.displayName || 'Unknown User'}</p>
+              <p className="text-[10px] uppercase text-terminal-green/40 tracking-tighter">ID: {profile?.terminalId || '0000'}</p>
             </div>
           </div>
           <button 
@@ -244,7 +255,7 @@ export default function Terminal({ profile }: TerminalProps) {
             <DirectMessageSystem profile={profile} />
           ) : viewMode === 'admin' ? (
             <AdminPanel profile={profile} />
-          ) : viewMode === 'tutor' ? (
+          ) : viewMode === 'tutor' && (activeBranch || branches[0]) ? (
             <Chat branch={activeBranch || branches[0]} profile={profile} isTutorMode={true} />
           ) : branches.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-terminal-green/20 gap-4">

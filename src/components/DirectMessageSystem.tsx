@@ -170,10 +170,10 @@ export default function DirectMessageSystem({ profile }: DirectMessageSystemProp
             <div className="p-4 border-b border-terminal-green/20 bg-black/20 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded bg-terminal-green/20 flex items-center justify-center text-terminal-green font-bold text-xs">
-                  {targetUser.displayName[0]}
+                  {targetUser.displayName?.[0] || '?'}
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-terminal-green">{targetUser.displayName}</p>
+                  <p className="text-xs font-bold text-terminal-green">{targetUser.displayName || 'Target User'}</p>
                   <p className="text-[10px] text-terminal-green/40">Encrypted Tunnel Active</p>
                 </div>
               </div>

@@ -72,15 +72,17 @@ export default function Chat({ branch, profile, isTutorMode = false }: ChatProps
         unsubscribe();
       };
     } else {
+      // Fetch latest 100 messages and sort them
       const q = query(
         collection(db, 'branches', branch.id, 'messages'),
-        orderBy('timestamp', 'asc'),
+        orderBy('timestamp', 'desc'),
         limit(100)
       );
 
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
-        setMessages(msgs);
+        // Sort ascending for display
+        setMessages(msgs.reverse());
       }, (error) => {
         handleFirestoreError(error, OperationType.GET, `branches/${branch.id}/messages`);
       });
@@ -115,7 +117,7 @@ export default function Chat({ branch, profile, isTutorMode = false }: ChatProps
             timestamp: Date.now()
           })
         });
-        handleAiTutorResponse(text);
+        handleAiTutorResponse(text, messages);
       } catch (error) {
         console.error('Tutor Error:', error);
       }
@@ -131,7 +133,7 @@ export default function Chat({ branch, profile, isTutorMode = false }: ChatProps
         });
 
         if (text.toLowerCase().startsWith('@root') || text.toLowerCase().startsWith('@ai')) {
-          handleAiResponse(text);
+          handleAiResponse(text, messages);
         }
       } catch (error) {
         handleFirestoreError(error, OperationType.WRITE, `branches/${branch.id}/messages`);
@@ -139,18 +141,22 @@ export default function Chat({ branch, profile, isTutorMode = false }: ChatProps
     }
   };
 
-  const handleAiTutorResponse = async (userPrompt: string) => {
+  const handleAiTutorResponse = async (userPrompt: string, history: Message[]) => {
     if (!tutorSessionId) return;
     setIsAiThinking(true);
     try {
+      const historyContext = history.slice(-10).map(m => 
+        `${m.senderName === 'ROOT' ? 'AI' : 'User'}: ${m.text}`
+      ).join('\n');
+
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: userPrompt,
+        contents: `Previous History:\n${historyContext}\n\nCurrent Question: ${userPrompt}`,
         config: {
           systemInstruction: `You are 'ROOT', a dedicated 1-on-1 tutor. 
           Topic: ${branch.name}. 
           Goal: Provide personalized explanations, code examples, and small exercises. 
-          Be encouraging but technical. Use markdown.`
+          Be encouraging but technical. Use markdown. Remember the history to provide continuity.`
         }
       });
 
@@ -170,13 +176,17 @@ export default function Chat({ branch, profile, isTutorMode = false }: ChatProps
     }
   };
 
-  const handleAiResponse = async (userPrompt: string) => {
+  const handleAiResponse = async (userPrompt: string, history: Message[]) => {
     setIsAiThinking(true);
     try {
       const prompt = userPrompt.replace(/^@(root|ai)\s*/i, '');
+      const historyContext = history.slice(-5).map(m => 
+        `${m.senderName}: ${m.text}`
+      ).join('\n');
+
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: prompt,
+        contents: `Conversation Context:\n${historyContext}\n\nNew Request: ${prompt}`,
         config: {
           systemInstruction: `You are 'ROOT', the lead technical instructor at The SWAL Terminal. 
           Your tone is professional, technical, and slightly cyber-punk/terminal-esque. 

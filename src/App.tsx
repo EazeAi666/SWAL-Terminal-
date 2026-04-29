@@ -56,7 +56,7 @@ export default function App() {
             ];
 
             for (const b of initialBranches) {
-              await addDoc(collection(db, 'branches'), {
+              await setDoc(doc(db, 'branches', b.name), {
                 ...b,
                 id: b.name,
                 createdAt: serverTimestamp()
