@@ -246,6 +246,11 @@ export default function Terminal({ profile }: TerminalProps) {
             <AdminPanel profile={profile} />
           ) : viewMode === 'tutor' ? (
             <Chat branch={activeBranch || branches[0]} profile={profile} isTutorMode={true} />
+          ) : branches.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-terminal-green/20 gap-4">
+              <p className="uppercase tracking-[0.5em]">Waiting for System Initialization...</p>
+              <p className="text-[10px] lowercase opacity-50 italic">Admin must initiate seeding</p>
+            </div>
           ) : (
             <div className="flex-1 flex items-center justify-center text-terminal-green/20">
               <p className="uppercase tracking-[0.5em]">Initializing System...</p>

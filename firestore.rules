@@ -60,7 +60,7 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() && (
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'sudo') ||
-        (request.auth.token.email == "isrealadesina3@gmail.com" && request.auth.token.email_verified == true)
+        (request.auth.token.email.lower() == "isrealadesina3@gmail.com" && request.auth.token.email_verified == true)
       );
     }
 
@@ -73,7 +73,6 @@ service cloud.firestore {
 
     function isValidUser(data) {
       return data.keys().hasAll(['uid', 'displayName', 'role', 'terminalId']) &&
-             data.uid == request.auth.uid &&
              data.displayName is string && data.displayName.size() > 0 && data.displayName.size() < 100 &&
              data.role in ['user', 'teacher', 'sudo'] &&
              data.terminalId is string;
@@ -134,7 +133,7 @@ service cloud.firestore {
     }
 
     match /directMessages/{id} {
-      allow read: if isAuthenticated() && (request.auth.uid == resource.data.senderUid || request.auth.uid == resource.data.receiverUid || isAdmin());
+      allow read: if isAuthenticated() && (isAdmin() || resource == null || request.auth.uid == resource.data.senderUid || request.auth.uid == resource.data.receiverUid);
       allow create: if isAuthenticated() && isValidDM(request.resource.data);
       allow update: if false;
       allow delete: if isAdmin();
@@ -170,15 +169,19 @@ service cloud.firestore {
     }
 
     match /userProgress/{progressId} {
-      allow read: if isAuthenticated() && (request.auth.uid == resource.data.uid || isAdmin());
+      allow read: if isAuthenticated() && (isAdmin() || resource == null || request.auth.uid == resource.data.uid);
       allow create: if isAuthenticated() && isValidUserProgress(request.resource.data);
-      allow update: if isAuthenticated() && (request.auth.uid == resource.data.uid || isAdmin()) && isValidUserProgress(request.resource.data);
+      allow update: if isAuthenticated() && (isAdmin() || (resource != null && resource.data.uid == request.auth.uid)) && isValidUserProgress(request.resource.data);
     }
 
     match /aiTutoringSessions/{sessionId} {
-      allow read: if isAuthenticated() && (request.auth.uid == resource.data.uid || isAdmin());
+      allow read: if isAuthenticated() && (isAdmin() || resource == null || request.auth.uid == resource.data.uid);
       allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
-      allow update: if isAuthenticated() && (request.auth.uid == resource.data.uid || isAdmin());
+      allow update: if isAuthenticated() && (isAdmin() || (resource != null && resource.data.uid == request.auth.uid));
+    }
+
+    match /test/connection {
+      allow read: if isAuthenticated();
     }
   }
 }

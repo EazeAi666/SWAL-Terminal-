@@ -49,7 +49,6 @@ export default function App() {
               { name: 'english-it', description: 'Mastering professional communication in tech.' },
               { name: 'cybersecurity', description: 'Defending the digital frontier.' },
               { name: 'ethical-hacking', description: 'Thinking like a hacker to build better defenses.' },
-              { name: 'python-core', description: 'Mastering the fundamentals of Python.' },
               { name: 'data-science', description: 'Extracting insights from complex data.' },
               { name: 'cloud-computing', description: 'Scaling applications in the cloud.' },
               { name: 'react-mastery', description: 'Building complex apps with React.' },
@@ -354,8 +353,15 @@ export default function App() {
         }
       };
 
-      seedBranches();
-      seedCourses();
+      const seedData = async () => {
+        // Only seed if user is admin, to prevent permission errors for others
+        if (user.email === 'isrealadesina3@gmail.com') {
+          await seedBranches();
+          await seedCourses();
+        }
+      };
+
+      seedData();
 
       return () => unsubscribe();
     }
