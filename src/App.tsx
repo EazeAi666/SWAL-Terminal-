@@ -250,10 +250,35 @@ export default function App() {
                 ]
               },
               {
+                id: 'typescript-101',
+                title: 'TypeScript Essentials for Web Dev',
+                description: 'Add type safety to your JavaScript projects and build more robust applications.',
+                order: 6,
+                modules: [
+                  {
+                    id: 'ts-intro',
+                    title: 'Why TypeScript?',
+                    content: 'TypeScript is a strongly typed programming language that builds on JavaScript, giving you better tooling at any scale.',
+                    order: 1,
+                    githubLink: 'https://github.com/swal-learn/ts-basics',
+                    quiz: {
+                      id: 'quiz-ts-1',
+                      questions: [
+                        {
+                          question: 'What is the main benefit of using TypeScript over JavaScript?',
+                          options: ['Faster execution speed', 'Static type checking', 'Simpler syntax', 'Browser-only compatibility'],
+                          correctAnswer: 1
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
                 id: 'node-101',
                 title: 'Backend Development with Node.js',
                 description: 'Build scalable server-side applications with JavaScript.',
-                order: 6,
+                order: 7,
                 modules: [
                   {
                     id: 'node-intro',
@@ -278,7 +303,7 @@ export default function App() {
                 id: 'hacking-101',
                 title: 'Ethical Hacking & Penetration Testing',
                 description: 'Learn the tools and techniques used by security professionals to find vulnerabilities.',
-                order: 7,
+                order: 8,
                 modules: [
                   {
                     id: 'hacking-intro',
@@ -303,7 +328,7 @@ export default function App() {
                 id: 'ds-101',
                 title: 'Python for Data Science',
                 description: 'Using Python to analyze data and build predictive models.',
-                order: 8,
+                order: 9,
                 modules: [
                   {
                     id: 'numpy-pandas',

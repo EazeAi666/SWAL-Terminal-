@@ -87,7 +87,16 @@ export default function CourseSystem({ profile }: CourseSystemProps) {
   const isModuleUnlocked = (module: Module) => {
     if (module.order === 1) return true;
     const prevModule = modules.find(m => m.order === module.order - 1);
+    // Ensure the previous module is completed with a score >= 70 (which is already enforced in handleQuizSubmit)
     return prevModule ? progress?.completedModules.includes(prevModule.id) : false;
+  };
+
+  const getModuleStatus = (module: Module) => {
+    const unlocked = isModuleUnlocked(module);
+    const completed = progress?.completedModules.includes(module.id);
+    const score = progress?.quizScores[module.id];
+    
+    return { unlocked, completed, score };
   };
 
   const handleQuizSubmit = async () => {
@@ -98,24 +107,23 @@ export default function CourseSystem({ profile }: CourseSystemProps) {
       if (quizAnswers[i] === q.correctAnswer) correctCount++;
     });
 
-    const score = (correctCount / quiz.questions.length) * 100;
+    const score = Math.round((correctCount / quiz.questions.length) * 100);
     const passed = score >= 70;
 
     setQuizResult({ score, passed });
 
     if (passed) {
       const progressId = `${profile.uid}_${activeCourse.id}`;
-      const newCompletedModules = [...(progress?.completedModules || [])];
-      if (!newCompletedModules.includes(activeModule.id)) {
-        newCompletedModules.push(activeModule.id);
-      }
+      const currentCompleted = progress?.completedModules || [];
+      const newCompletedModules = Array.from(new Set([...currentCompleted, activeModule.id]));
 
       const allModuleIds = modules.map(m => m.id);
       const isCourseComplete = allModuleIds.every(id => newCompletedModules.includes(id));
 
       const updateData: any = {
         completedModules: newCompletedModules,
-        [`quizScores.${activeModule.id}`]: score
+        [`quizScores.${activeModule.id}`]: score,
+        lastUpdated: serverTimestamp()
       };
 
       if (isCourseComplete && !progress?.certificateIssued) {
@@ -152,21 +160,27 @@ export default function CourseSystem({ profile }: CourseSystemProps) {
               {activeCourse?.id === course.id && (
                 <div className="ml-2 space-y-1 border-l border-terminal-green/10 pl-2">
                   {modules.map(m => {
-                    const unlocked = isModuleUnlocked(m);
-                    const completed = progress?.completedModules.includes(m.id);
+                    const { unlocked, completed, score } = getModuleStatus(m);
                     return (
                       <button
                         key={m.id}
                         disabled={!unlocked}
                         onClick={() => setActiveModule(m)}
-                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-[11px] transition-colors ${
+                        className={`w-full flex items-center justify-between px-2 py-1.5 rounded text-[11px] group transition-all ${
                           activeModule?.id === m.id 
                             ? 'bg-terminal-green/20 text-terminal-green' 
                             : unlocked ? 'text-terminal-text/60 hover:text-terminal-green hover:bg-terminal-green/5' : 'text-terminal-text/20 cursor-not-allowed'
                         }`}
                       >
-                        {completed ? <CheckCircle className="w-3 h-3 text-terminal-green" /> : unlocked ? <Play className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
-                        <span className="truncate">{m.title}</span>
+                        <div className="flex items-center gap-2 truncate">
+                          {completed ? <CheckCircle className="w-3 h-3 text-terminal-green" /> : unlocked ? <Play className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                          <span className="truncate">{m.title}</span>
+                        </div>
+                        {score !== undefined && (
+                          <span className={`text-[9px] font-bold px-1 rounded ${score >= 70 ? 'text-terminal-green bg-terminal-green/10' : 'text-red-500 bg-red-500/10'}`}>
+                            {score}%
+                          </span>
+                        )}
                       </button>
                     );
                   })}
