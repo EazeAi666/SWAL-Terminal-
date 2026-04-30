@@ -14,9 +14,17 @@ interface ChatProps {
   isTutorMode?: boolean;
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const getAiClient = () => {
+  const apiKey = (import.meta.env.VITE_GEMINI_API_KEY as string) || (process.env.GEMINI_API_KEY as string);
+  if (!apiKey) {
+    console.warn('GEMINI_API_KEY is missing. AI features will be disabled.');
+    return null;
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
 export default function Chat({ branch, profile, isTutorMode = false }: ChatProps) {
+  const ai = getAiClient();
   const [messages, setMessages] = useState<Message[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [inputText, setInputText] = useState('');
@@ -142,7 +150,7 @@ export default function Chat({ branch, profile, isTutorMode = false }: ChatProps
   };
 
   const handleAiTutorResponse = async (userPrompt: string, history: Message[]) => {
-    if (!tutorSessionId) return;
+    if (!tutorSessionId || !ai) return;
     setIsAiThinking(true);
     try {
       const historyContext = history.slice(-10).map(m => 
@@ -177,6 +185,7 @@ export default function Chat({ branch, profile, isTutorMode = false }: ChatProps
   };
 
   const handleAiResponse = async (userPrompt: string, history: Message[]) => {
+    if (!ai) return;
     setIsAiThinking(true);
     try {
       const prompt = userPrompt.replace(/^@(root|ai)\s*/i, '');
