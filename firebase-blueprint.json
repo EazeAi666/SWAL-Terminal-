@@ -136,6 +136,8 @@
         "uid": { "type": "string" },
         "branchId": { "type": "string" },
         "topic": { "type": "string" },
+        "title": { "type": "string" },
+        "isPinned": { "type": "boolean" },
         "messages": { "type": "array" },
         "createdAt": { "type": "string", "format": "date-time" }
       },

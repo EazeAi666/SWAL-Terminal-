@@ -1,10 +1,10 @@
 {
-  "projectId": "gen-lang-client-0556670418",
-  "appId": "1:543364431531:web:bfb03420dba9cfab2881ee",
-  "apiKey": "AIzaSyA-0-J8iLsf1F2F9l4cb1cE7d0lsVOjldk",
-  "authDomain": "gen-lang-client-0556670418.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-8fc8bf30-be69-43ae-b766-8db895f2efda",
-  "storageBucket": "gen-lang-client-0556670418.firebasestorage.app",
-  "messagingSenderId": "543364431531",
-  "measurementId": ""
+  "projectId": "swal-terminal",
+  "appId": "1:378048680799:web:5026b94ba776e1bec35cea",
+  "apiKey": "AIzaSyCWel7ytWo_JzDlHv5JGmGiJ7vy8lsyETM",
+  "authDomain": "swal-terminal.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "swal-terminal.firebasestorage.app",
+  "messagingSenderId": "378048680799",
+  "measurementId": "G-L9EQSYSMQS"
 }

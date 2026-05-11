@@ -16,7 +16,9 @@ const config = {
 
 const app = initializeApp(config);
 export const auth = getAuth(app);
-export const db = getFirestore(app, config.firestoreDatabaseId);
+export const db = config.firestoreDatabaseId && config.firestoreDatabaseId !== '(default)' 
+  ? getFirestore(app, config.firestoreDatabaseId)
+  : getFirestore(app);
 export const googleProvider = new GoogleAuthProvider();
 
 export async function signInWithGoogle() {

@@ -71,6 +71,8 @@ export interface AiTutoringSession {
   uid: string;
   branchId: string;
   topic: string;
+  title?: string;
+  isPinned?: boolean;
   messages: { role: 'user' | 'model'; text: string; timestamp: number }[];
   createdAt: Timestamp;
 }
